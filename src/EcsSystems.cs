@@ -130,7 +130,7 @@ namespace Leopotam.Ecs {
         IEcsDrawSystem[] _drawSystems = new IEcsDrawSystem[16];
 
         /// <summary>
-        /// Count of registered IEcsRunSystem systems.
+        /// Count of registered IEcsDrawSystem systems.
         /// </summary>
         int _drawSystemsCount;
 
