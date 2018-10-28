@@ -52,6 +52,17 @@ namespace Leopotam.Ecs {
         void Run ();
     }
 
+    /// <summary>
+    /// Allows custom draw processing.
+    /// </summary>
+    public interface IEcsDrawSystem : IEcsSystem
+    {
+        /// <summary>
+        /// Drawing.
+        /// </summary>
+        void Draw ();
+    }
+
 #if DEBUG
     /// <summary>
     /// Debug interface for systems events processing.
@@ -112,6 +123,16 @@ namespace Leopotam.Ecs {
         /// Count of registered IEcsRunSystem systems.
         /// </summary>
         int _runSystemsCount;
+
+        /// <summary>
+        /// Registered IEcsDrawSystem systems.
+        /// </summary>
+        IEcsDrawSystem[] _drawSystems = new IEcsDrawSystem[16];
+
+        /// <summary>
+        /// Count of registered IEcsRunSystem systems.
+        /// </summary>
+        int _drawSystemsCount;
 
 #if DEBUG
         /// <summary>
@@ -235,6 +256,14 @@ namespace Leopotam.Ecs {
                 }
                 _runSystems[_runSystemsCount++] = runSystem;
             }
+
+            var drawSystem = system as IEcsDrawSystem;
+            if (drawSystem != null) {
+                if (_drawSystemsCount == _runSystems.Length) {
+                    Array.Resize (ref _drawSystems, _drawSystemsCount << 1);
+                }
+                _drawSystems[_drawSystemsCount++] = drawSystem;
+            }
             return this;
         }
 
@@ -323,6 +352,11 @@ namespace Leopotam.Ecs {
             }
             _runSystemsCount = 0;
 
+            for (var i = _drawSystemsCount - 1; i >= 0; i--) {
+                _drawSystems[i] = null;
+            }
+            _drawSystemsCount = 0;
+
 #if !LEOECS_DISABLE_INJECT
             for (var i = _injectSystemsCount - 1; i >= 0; i--) {
                 _injectSystems[i] = null;
@@ -347,6 +381,18 @@ namespace Leopotam.Ecs {
 #endif
                 _runSystems[i].Run ();
                 _world.ProcessDelayedUpdates ();
+            }
+        }
+        
+        /// <summary>
+        /// Processes all IEcsDrawSystem systems.
+        /// </summary>
+        public void Draw () {
+#if DEBUG
+            if (!_inited) { throw new Exception ("EcsSystems instance was not initialized"); }
+#endif
+            for (var i = 0; i < _drawSystemsCount; i++) {
+                _drawSystems[i].Draw ();
             }
         }
 
